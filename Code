@@ -1,0 +1,25 @@
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("Streaming Projesi").getOrCreate()
+
+rawDF = spark.readStream.format("kafka").option("kafka.bootstrap.servers","IP") \
+                          .option("subscribe","yenikayit") \
+                          .option("startingOffsets","earliest").load()
+                          
+rawDF.show()
+
+from pyspark.sql.types import * 
+from pyspark.sql.functions import *
+
+schema = StructType() \
+        .add('name',StringType()) \
+        .add('surname',StringType()) \
+        .add('age',IntegerType()) \
+        .add('city',StringType())
+        
+        
+ testDF = rawDF.select(from_json(col('value').cast('string'),schema).alias("data")).select("data.*")
+ 
+ min50DF = testDF.filter("age>50")
+ 
+ display(min50DF)
